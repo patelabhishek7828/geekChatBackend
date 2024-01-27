@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const User = mongoose.model("User");
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 require('dotenv').config();
 
@@ -92,6 +93,85 @@ router.post('/signup', async( req, res) => {
         catch(error) {
             return res.status(422).json({ error: "user not registered", error})
         }
+    }
+})
+
+// forgot password
+router.post('/verifyForgotPassword', (req, res) => {
+    console.log(req.body)
+
+    const {email} = req.body;
+    if(!email){
+        return res.status(422).json({message: "please add all the fields"});
+    } else {
+        User.findOne({email: email}).then(async (savedUser) => {
+            if(savedUser){
+                try {
+                    let verificationCode = Math.floor(100000 + Math.random()* 900000)
+                    return res.send({message: 'Verification code has been sent to your Email', email, verificationCode});
+                }
+                catch(err){
+                    return res.status(422).json({ error: "Error sending email", err});
+                }
+            }
+            else {
+                return res.status(422).json({error : 'Invalid Credentials'})
+            }
+        })
+    }
+})
+
+// resetPassword
+router.post('/resetPassword', (req, res) => {
+    console.log(req.body);
+    const {email, password} = req.body;
+    if(!email || !password){
+        return res.status(422).json({ error : "Please add all the fields"});
+    }
+    else{
+        User.findOne({email: email}).then(async(savedUser) => {
+            if(savedUser){
+                savedUser.password = password
+                await savedUser.save()
+                .then(user => {
+                    res.send({ message: "Password changed succesfully"});
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+            } else {
+                return res.status(422).json({error : "Invalid Credentials"})
+            }
+        })
+    }
+})
+
+router.post('/signin', (req, res) => {
+    const {email, password} = req.body;
+    if(!email || !password){
+        return res.status(422).json({error : "Please add all the fields"})
+    } else {
+        User.findOne({ email: email}).then(async(savedUser) => {
+            if(!savedUser){
+                return res.status(422).json({error : "Invalid Credentials"});
+            }else {
+                // if(password == )
+                console.log(savedUser)
+                bcrypt.compare(password, savedUser.password).then(doMatch => {
+                    if(doMatch){
+                      const token = jwt.sign({ _id: savedUser._id}, process.env.JWT_SECRET);
+                      const {_id, username, email} = savedUser
+                      
+                      res.json({message: "Succesfully Sign In", token, user:{_id, username, email} })
+                    } else {
+                        return res.status(422).json({error : "Invalid Credentials"});
+                    }
+                })
+                    // res.status(200).json({ message: "User Looged in succesfully", savedUser })
+            }
+        }).catch(err => {
+            console.log(err)
+        })
     }
 })
 module.exports = router;
