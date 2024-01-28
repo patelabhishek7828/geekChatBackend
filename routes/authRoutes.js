@@ -173,8 +173,8 @@ router.post('/signin', (req, res) => {
     }
 })
 
-// added route userdata
-router.post('/userdata', (req, res) => {
+// added route otheruserdata
+router.post('/otheruserdata', (req, res) => {
     const {email} = req.body;
     User.findOne({email: email}).then(async(savedUser) => {
         if(!savedUser){
@@ -184,6 +184,57 @@ router.post('/userdata', (req, res) => {
           return res.status(200).json({message : "User Found", user : savedUser})  
         }
     })
+})
+
+router.post('/userdata', (req, res) => {
+    const {authorization} = req.headers;
+    // authorization = "Bearer dfdfhkfhdfkjh"    
+    if(!authorization) {
+        return res.status(401).json({error : 'You must be logged in, token not given'});
+    } 
+    const token = authorization.replace("Bearer ", "");
+    console.log(token);
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+        if(err){
+            return res.status(401).json({error: "You must be logged in, token invalid"});
+        } else {
+            const {_id} = payload;
+            User.findById(_id).then(userDataa => {
+                res.status(200).send({message: 'User Found', user: userDataa})
+            })
+        }
+    })
+})
+
+
+// change Password
+router.post('/changePassword', (req, res) => {
+    const {oldPassword, newPassword, email} = req.body;
+
+    if(!oldPassword || !newPassword || !email ){
+        return res.status(422).json({error : "Please add all the fields"})
+    } else {
+        User.findOne({email: email}).then(async(savedUser) => {
+            if(savedUser){
+                bcrypt.compare(oldPassword, savedUser.password).then((doMatch)=> {
+                    if(doMatch){
+                        savedUser.password = newPassword
+                        savedUser.save().then(user => {
+                            res.json({message : "Password changed succesfully"})
+                        }).catch(err => {
+                            console.log(err)
+                            return res.status(422).json({error: "Server Error"})
+                        })
+                    } else {
+                        return res.status(422).json({error: "Invalid Credentials"});
+                    }
+                })
+            } else {
+                return res.status(422).json({error: "Invalid Credentials"});
+            }
+        })
+    }
 })
 
 module.exports = router;
