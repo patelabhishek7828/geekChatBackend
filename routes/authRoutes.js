@@ -36,8 +36,6 @@ async function mailer(receiverEmail, code){
 }
 
 router.post('/verify', (req, res) => {
-    // return res.status(200).json({message: 'Email sent', email:'abc@test.com', verificationCode: '123456'});
-    // console.log("verify called")
     console.log(req.body)
 
     const {email} = req.body;
@@ -174,4 +172,18 @@ router.post('/signin', (req, res) => {
         })
     }
 })
+
+// added route userdata
+router.post('/userdata', (req, res) => {
+    const {email} = req.body;
+    User.findOne({email: email}).then(async(savedUser) => {
+        if(!savedUser){
+            return res.status(422).json({error : "Invalid Credentials"})
+        } else {
+          console.log(savedUser);
+          return res.status(200).json({message : "User Found", user : savedUser})  
+        }
+    })
+})
+
 module.exports = router;
