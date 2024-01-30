@@ -237,4 +237,54 @@ router.post('/changePassword', (req, res) => {
     }
 })
 
+// Update User Data
+router.post('/setusername', (req, res) => {
+    const { username, email } = req.body;
+    
+    if(!username || !email){
+        return res.status(422).json({error : "Please add all the fields"})
+    }
+    User.find({username}).then(async(savedUser) => {
+        if(savedUser.length > 0){
+            return res.status(422).json({error: 'Username already exists'})
+        }else {
+            User.findOne({email : email}).then(async(savedUser) => {
+                if(savedUser){
+                    savedUser.username = username;
+                    savedUser.save().then(user => {
+                        res.json({message: 'Username Updated Successfully'});
+                    }).catch(err => {
+                        return res.status(422).json({error: "Server Error"});
+                    })
+                }else{
+                    return res.status(422).json({error: "Invalid Credentials"});
+                }
+            }).catch(err => {
+                return res.status(422).json({error: "Server Error"});
+            })
+        }
+    })
+})
+
+// description
+router.post('/setdescription', (req, res) => {
+    const {email, description} = req.body;
+    if(!email || !description){
+        return res.status(422).json({error : "Please Add all the fields"});
+    }
+    User.findOne({email: email}).then(async(savedUser) =>{
+        if(savedUser){
+            savedUser.description = description
+            savedUser.save().then(user => {
+                res.json({message: "Description Updated Succesfully"});
+            }).catch(err => {
+                return res.status(422).json({error : 'Server Error'});
+            })
+        }else {
+            return res.status(422).json({error: "Invalid Credentials"});
+        }
+    }).catch(error => {
+        return res.status(422).json({error : 'Server Error'});
+    })
+})
 module.exports = router;
