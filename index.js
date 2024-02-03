@@ -8,10 +8,11 @@ require('./db');
 require('./models/User')
 
 const authRoutes = require('./routes/authRoutes');
+const uploadMediaRoutes = require('./routes/uploadMediaRoutes')
 // requireToken skippes
 app.use(bodyParser.json());
 app.use(authRoutes);
-
+app.use(uploadMediaRoutes);
 
 app.get('/', (req, res)=>{
     return res.send('hello abhishek');
