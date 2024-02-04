@@ -29,7 +29,26 @@ router.post('/setprofilepic', (req, res) => {
             return res.status(422).json({error: "Invalid Credentials"})
         }
     })
-    console.log("deduhuiedh", email)
+})
+
+router.post('/addpost', (req, res) => {
+    const {email, post, postDescription} = req.body;
+    console.log("object", req.body)
+    User.findOne({email: email}).then(async(savedUser) =>{
+        if(!savedUser){
+            return res.status(422).json({error : 'Invalid Credentials'});
+        }else {
+            savedUser.posts.push({post, postDescription, likes:[], comments:[]});
+            savedUser.save().then(user =>{
+                res.json({message: 'Post Added Succesfully'})
+            })
+            .catch(err =>{
+                console.log(err)    
+            })
+        }
+    }).catch(err =>{
+        console.log(err)
+    })
 })
  
 module.exports = router;
