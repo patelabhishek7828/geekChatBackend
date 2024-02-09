@@ -50,5 +50,5 @@ router.post('/addpost', (req, res) => {
         console.log(err)
     })
 })
- 
+
 module.exports = router;

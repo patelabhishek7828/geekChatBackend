@@ -146,6 +146,7 @@ router.post('/resetPassword', (req, res) => {
 
 router.post('/signin', (req, res) => {
     const {email, password} = req.body;
+    console.log("hhhh", req.body)
     if(!email || !password){
         return res.status(422).json({error : "Please add all the fields"})
     } else {
@@ -285,6 +286,63 @@ router.post('/setdescription', (req, res) => {
         }
     }).catch(error => {
         return res.status(422).json({error : 'Server Error'});
+    })
+})
+
+// get search user by keyword
+router.post('/searchuser', (req, res) => {
+    const { keyword } = req.body;
+    if(!keyword) {
+        return res.status(422).json({error: 'Please search a username'})
+    }
+    console.log(req.body)
+    User.find({ username: { $regex: keyword, $options: 'i' } })
+    .then(user => {
+        console.log(user)
+        let data = [];
+        user.map(item => {  
+            data.push({
+                _id: item.id,
+                username: item.username,
+                email: item.email,
+                description: item.description,
+                profilepic: item.profilepic
+            })
+            console.log("ddddaaatat", data)
+            if(data.length == 0){
+               return res.status(422).json({error: 'No User found'})
+            }
+            res.status(200).send({ message: 'User Found', user: data })
+        })
+    }).catch(err => {
+        res.status(422).json({error: "Server Error"})
+    })
+})
+ 
+// otherdata
+router.post('/differentuserdata', (req, res) => {
+    const {email} = req.body;
+
+    User.findOne({email: email}).then(savedUser => {
+        if(!savedUser){
+            return res.status(422).json({error: "Invalid Credentials"})
+        }else {
+            let data = {
+                _id : savedUser._id,
+                username : savedUser.username,
+                email : savedUser.email,
+                description : savedUser.description,
+                profilepic : savedUser.profilepic,
+                followers : savedUser.followers,
+                following : savedUser.following,
+                posts : savedUser.posts,
+            }
+            // console.log(data)
+            res.status(200).send({
+                message: 'User Found', 
+                user: data
+            })
+        }
     })
 })
 
