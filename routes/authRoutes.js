@@ -300,25 +300,24 @@ router.post('/searchuser', (req, res) => {
     .then(user => {
         console.log(user)
         let data = [];
-        user.map(item => {  
-            data.push({
+        data = user.map(item => ( 
+            {
                 _id: item.id,
                 username: item.username,
                 email: item.email,
                 description: item.description,
                 profilepic: item.profilepic
-            })
-            console.log("ddddaaatat", data)
+            }
+        ));
             if(data.length == 0){
                return res.status(422).json({error: 'No User found'})
             }
-            res.status(200).send({ message: 'User Found', user: data })
-        })
+            res.status(200).send({ message: 'User Found', users: data })
     }).catch(err => {
         res.status(422).json({error: "Server Error"})
     })
 })
- 
+
 // otherdata
 router.post('/differentuserdata', (req, res) => {
     const {email} = req.body;
