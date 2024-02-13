@@ -342,6 +342,123 @@ router.post('/differentuserdata', (req, res) => {
                 user: data
             })
         }
+    }).catch(err => {
+        return res.status(422).json({error: "Server Error"})
+    })
+})
+
+// check follow user
+router.post('/checkFollow' , (req, res) => {
+    const {followfrom, followto} = req.body;
+    console.log(followfrom, followto) // (myEmail, searchUserEnail)
+    if(!followfrom || !followto){
+        return res.status(422).json({error: "Invalid Credentials"})
+    } else {
+        User.findOne({email: followfrom}).then(mainUser => {
+            if(!mainUser){
+                return res.status(200).json({error: "Invalid Credentials"});
+            } else {
+                let data = mainUser.following.includes(followto)
+                console.log(data)
+                if(data == true){
+                    res.status(200).send({
+                        message: "User in following list"
+                    })
+                }else {
+                    res.status(200).send({
+                        message: "User not in following list"
+                    })
+                }
+            }
+        }).catch(err => {
+            res.status(422).json({error: "Server Error"})
+        })
+    }
+})
+
+// follow user
+router.post('/followUser', (req, res) => {
+    // followfrom: self,
+    // followto: other,
+    const {followfrom, followto} = req.body
+    console.log(followfrom, followto)
+
+    // our profile -> add friend email in our following section
+    // friend profile -> add our email in friend followers section
+    if(!followfrom || !followto){
+        return res.status(422).json({ error: "Invalid Credentials" });
+    }
+    User.findOne({email: followfrom}).then(mainUser =>{
+        if(!mainUser){
+            return res.status(422).json({ error: "Invalid Credentials" });
+        }else {
+            if(mainUser.following.includes(followto)){
+                return res.status(422).json({ error: "Already Following" });
+            }else {
+                mainUser.following.push(followto);
+                mainUser.save();
+            }
+
+            User.findOne({email: followto}).then(otherUser =>{
+                if(!otherUser){
+                    return res.status(422).json({ error: "Invalid Credentials" });
+                }else {
+                    if(otherUser.followers.includes(followfrom)){
+                        return res.status(422).json({ error: "Already Following" });
+                    }else {
+                        otherUser.followers.push(followfrom);
+                        otherUser.save();
+                    }
+
+                    res.status(200).send({
+                        message: "User Followed"
+                    })
+                }
+            })
+        }
+    }).catch(err =>{
+        return res.status(422).json({ error: "Server"})
+    })
+})
+
+// unfollow user
+router.post('/unfollowUser', (req, res) => {
+    // followfrom: self,
+    // followto: other,
+    const {followfrom, followto} = req.body
+    console.log(followfrom, followto)
+
+    // our profile -> remove friend email in our following section
+    // friend profile -> remove our email in friend followers section
+    if(!followfrom || !followto){
+        return res.status(422).json({ error: "Invalid Credentials" });
+    }
+    User.findOne({email: followfrom}).then(mainUser =>{
+        if(!mainUser){
+            return res.status(422).json({ error: "Invalid Credentials" });
+        }else {
+            if(mainUser.following.includes(followto)){
+                mainUser.following.pop(followto);
+                mainUser.save();
+            }
+
+            User.findOne({email: followto}).then(otherUser =>{
+                if(!otherUser){
+                    return res.status(422).json({ error: "Invalid Credentials" });
+                }else {
+                    if(otherUser.followers.includes(followfrom)){
+                        otherUser.followers.pop(followfrom);
+                        otherUser.save();
+                    }
+
+                    res.status(200).send({
+                        message: "User unFollowed"
+                    })
+                }
+            })
+        }
+    }).catch(err =>{
+        return res.status(422).json({ error: "Server Error"})
     })
 })
 
